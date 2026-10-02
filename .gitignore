@@ -1,0 +1,12 @@
+.gradle/
+.idea/
+local.properties
+**/build/
+artifacts/
+*.jks
+*.keystore
+.env
+.env.*
+.DS_Store
+.openai/
+.sites-runtime/

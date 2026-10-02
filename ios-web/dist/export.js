@@ -1,0 +1,10 @@
+'use strict';
+(function(root){
+function metadata(config,frame){return '# Heat Lab iPhone; 3D calibrated immersed-layer variant; core excludes 2h band\n# config_SI='+JSON.stringify(config)+'\n# time_s='+frame.time+'\n';}
+function exportData(kind,config,grid,frame){if(!grid||!frame)throw Error('请先完成网格初始化。');const f=frame,rows=[];let name='steak-'+kind+'.csv',type='text/csv;charset=utf-8',content=metadata(config,frame);
+ if(kind==='core'){rows.push('x_m,y_m,z_m,temperature_C,time_s');for(const i of grid.coreIndices)rows.push([grid.x0+(i%grid.nx+.5)*grid.h,grid.y0+(Math.floor(i/grid.nx)%grid.ny+.5)*grid.h,grid.z0+(Math.floor(i/(grid.nx*grid.ny))+.5)*grid.h,f.field[i],f.time].join(','));}
+ else if(kind==='history'){rows.push('time_s,core_min_C,core_max_C,core_mean_C,cold_x_m,cold_y_m,cold_z_m,flip_count,pan_W,air_W,masked_energy_J,boundary_input_J,numerical_box_J,accounting_residual_J');rows.push(...f.history.map(r=>r.join(',')));}
+ else if(kind==='boundary'){rows.push('body_x_m,body_y_m,body_z_m,world_x_m,world_y_m,world_z_m,area_m2,contact_fraction,surface_C,inward_flux_W_m2,time_s');const parity=f.row[7]%2,sign=parity?-1:1;grid.geometry.markers.forEach((q,i)=>rows.push([q[0],q[1],q[2],q[0],sign*q[1],sign*q[2],q[3],grid.contact[parity][i],f.surface[i],f.flux[i],f.time].join(',')));}
+ else if(kind==='mesh'){name='steak-surface-mm.stl';type='application/octet-stream';content='';rows.push('solid steak_mm');const g=grid.geometry;for(const q of g.quads)for(let k=1;k<=2;k++){const a=g.vertices[q[0]],v=g.vertices[q[k]],w=g.vertices[q[k+1]],u=v.map((x,i)=>x-a[i]),b=w.map((x,i)=>x-a[i]),n=[u[1]*b[2]-u[2]*b[1],u[2]*b[0]-u[0]*b[2],u[0]*b[1]-u[1]*b[0]],length=Math.hypot(...n);rows.push('facet normal '+n.map(x=>x/length).join(' '),'outer loop',...[a,v,w].map(p=>'vertex '+p.map(x=>x*1000).join(' ')),'endloop','endfacet');}rows.push('endsolid steak_mm');}else throw Error('未知导出类型');return {name,type,content:content+rows.join('\n')+'\n'};}
+if(typeof module!=='undefined'&&module.exports)module.exports={exportData};else root.HeatLabExport={exportData};
+})(globalThis);

@@ -1,0 +1,26 @@
+<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#0b191e"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"><meta name="apple-mobile-web-app-title" content="Heat Lab"><meta name="description" content="3D 牛排瞬态传热模拟：锅面接触、空气对流与定时翻面。"><title>Heat Lab · 3D 牛排</title><link rel="manifest" href="./manifest.webmanifest"><link rel="apple-touch-icon" href="./icon-192.png"><link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='15' fill='%230b191e'/%3E%3Cpath d='M20 18v28m24-28v28M20 32h24' fill='none' stroke='%235ce4cd' stroke-width='6'/%3E%3C/svg%3E"><link rel="stylesheet" href="./style.css"><script src="./solver.js" defer></script><script src="./export.js" defer></script><script src="./app.js" defer></script></head><body>
+<header><div><span class="brand">HEAT LAB</span><span class="version">3D / iPhone</span></div><button id="install" class="quiet">安装</button></header>
+<main><nav aria-label="功能"><button class="active" data-tab="explore">模拟</button><button data-tab="setup">设置</button><button data-tab="method">方法</button></nav>
+<div id="error" role="alert" hidden></div>
+<section id="explore" class="page"><div class="status-line"><span id="status" role="status">准备就绪</span><span id="clock">0 / 600 s</span></div><progress id="progress" value="0" max="600" aria-label="模拟进度"></progress>
+<div class="actions"><button id="run" class="primary">开始模拟</button><button id="reset" class="secondary">重置</button></div>
+<div class="model-panel"><canvas id="shape" aria-label="可拖动旋转的三维牛排网格"></canvas><div class="model-caption"><span id="orientation">A 面朝下</span><span>拖动旋转</span></div></div>
+<div class="legend"><span><i class="teal"></i>暴露表面</span><span><i class="amber"></i>锅面接触</span><span>＋ 冷点</span></div>
+<div class="readout"><div><span class="label">最低内部温度</span><div><strong id="minimum">5.00</strong><span class="unit"> °C</span></div></div><div class="readout-right"><span class="label">下次翻面</span><b id="nextFlip">300 s</b><span class="label" id="flipCount">已翻面 0 次</span></div></div>
+<p class="muted" id="coldPosition">初始内部温度均匀</p>
+<div class="powers"><div><span class="label">锅面传热</span><b id="panPower">— W</b></div><div><span class="label">空气换热</span><b id="airPower">— W</b></div></div>
+<div class="section-title"><h2>内部温度切片</h2><button id="coldSlice" class="quiet">定位冷点</button></div>
+<label class="select-label">切片方向<select id="plane"><option value="0">XY · 沿厚度 z</option><option value="1">XZ · 沿宽度 y</option><option value="2">YZ · 沿长度 x</option></select></label>
+<label class="slice-label" for="slice" id="sliceLabel">z = 0 mm</label><input id="slice" type="range" min="0" max="21" value="11"><canvas id="heatmap" aria-label="三维温度场切片"></canvas><div class="scale"><span id="low">5 °C</span><div></div><span id="high">180 °C</span></div>
+<p class="muted">灰色为距表面不足 2 个网格间距的区域；冷点和统计仅取可解析内部。切片坐标随牛排移动。</p>
+<details><summary>数值诊断</summary><div id="diagnostics"></div><p class="muted">辅助计算域的热量交换是数值误差，不是实际散热。请比较不同网格分辨率。</p></details>
+<details><summary>导出结果</summary><div class="export-grid"><button data-export="core">内部 CSV</button><button data-export="history">温度历史</button><button data-export="boundary">边界 CSV</button><button data-export="mesh">网格 STL</button></div><p class="muted">导出当前显示的时刻。iPhone 可选择“存储到文件”。</p></details></section>
+<section id="setup" class="page" hidden><h1>设置模拟</h1><p class="muted">应用后将清除上一次结果。</p><div class="presets"><button id="steakPreset">圆润牛排</button><button id="ovenPreset">仅烤箱</button></div><form id="configForm"><div id="fields"></div><button type="submit" class="primary apply">应用并重新开始</button></form></section>
+<section id="method" class="page" hidden><h1>三维浸没层方法</h1><p>闭合曲面网格描述牛排，独立的三维笛卡尔网格计算内部瞬态导热。形状是可调的圆润近似，并非实物扫描。</p><h2>锅面、对流与翻面</h2><p>表面向内热流：</p><pre>q = w h锅 (T锅 − T表面)
+  + (1 − w) h空气 (T空气 − T表面)</pre><p>接触比例 w 由底部接触带深度和朝下法向平滑确定。接触带设为 0 可关闭锅面换热。每次翻面绕长度方向旋转 180°，接触面切换，牛排内部温度场连续。锅温和气温保持设定值。</p><h2>计算实现</h2><pre>uₜ = α (L u + D Rₙ S) + R(q/ρcₚ)
+Iu = (IH)S
+LH = −D Rₙ 1
+T = T初始 + u/H</pre><p>使用四点正则化 delta 函数、交错网格双层算子和校准的表面温度重构。与 Android 版采用同一离散算法，使用双精度数值。它是独立 immersed-layer 变体，不是 JuliaIBPM 原始 Neumann 约束算法。</p><h2>如何解读</h2><p>显式时间步在翻面时刻精确截断。球体对流解析解测试和 Android 跨版本比较用于核验实现；粗网格的加密误差不一定单调。辅助域交换的数值热量会单独报告，不能将很小的能量记账残差理解为准确的物理预测。</p><p>不模拟蒸发、辐射、结壳、流体运动或接触形变，也不作食品安全判断。材料与换热默认值仅供演示。</p><h2>保留与导出</h2><p>设置保存在当前设备。切到后台会暂停；刷新或关闭后不恢复计算结果。温度和坐标导出为 CSV，网格为毫米单位的 STL。</p><button id="installMethod" class="secondary">添加到 iPhone 主屏幕</button></section>
+<footer>本地计算 · 研究模型</footer></main>
+<dialog id="installDialog"><h2>安装到 iPhone</h2><ol><li>在 Safari 中打开本页面。</li><li>点“分享”，选择“添加到主屏幕”。</li><li>如有“作为网页 App 打开”，保持开启，然后点“添加”。</li></ol><p>这是主屏幕网页 App，无需安装 IPA。首次打开需联网；离线可用性取决于页面缓存及 iOS 存储策略。</p><button id="closeInstall" class="primary">知道了</button></dialog>
+</body></html>
