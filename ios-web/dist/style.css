@@ -5,3 +5,5 @@
 [hidden]{display:none!important}
 
 footer a{display:inline-block;color:var(--accent,#5ce4cd);padding:12px 0;text-underline-offset:3px}
+
+.doneness-legend{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin:16px 0;font-size:14px}.doneness-legend>div{display:grid;grid-template-columns:16px 1fr;column-gap:8px}.doneness-legend i{width:16px;height:16px;border-radius:3px}.doneness-legend small{grid-column:2;color:var(--muted,#a2b8bf)}#donenessNote a{color:#5ce4cd}

@@ -81,6 +81,7 @@ class Solver{
   this.volume=0;for(const a of this.mask)this.volume+=a*h*h*h;
   this.grad(this.mask,this.gradient);const n=norm(this.scaling);for(let s=0;s<m;s++)this.unit[s]=this.scaling[s]/n;for(let i=0;i<this.faceSize;i++)this.correction[i]=(-this.gradient[i]-this.faces[i])/n;
   this.scalar.sample(this.mask,this.traceMask);for(let s=0;s<m;s++){this.traceMask[s]/=this.scaling[s];if(this.traceMask[s]<.1)throw Error('表面掩膜无法解析。');}
+  this.peakTemperature=arr(this.size);this.peakTemperature.fill(c.initial);
   this.time=this.steps=this.panPower=this.airPower=this.boxPower=this.inputEnergy=this.boxEnergy=this.initialEnergy=0;this.updateBoundary();this.solveSurface();
  }
  index(x,y,z){return(z*this.ny+y)*this.nx+x;}
@@ -95,7 +96,7 @@ class Solver{
  coreStats(){let min=Infinity,max=-Infinity,sum=0,cold=-1;for(const i of this.coreIndices){const t=this.c.initial+this.u[i]/this.mask[i];if(t<min){min=t;cold=i;}max=Math.max(max,t);sum+=t;}return[min,max,sum/this.coreIndices.length,cold];}
  energy(){let sum=0;for(const v of this.u)sum+=v;return this.capacity*this.h*this.h*this.h*sum;}
  energyBalanceError(){return this.energy()-this.initialEnergy-this.inputEnergy-this.boxEnergy;}
- initializeUniform(t){if(!Number.isFinite(t))throw Error('Nonfinite temperature');for(let i=0;i<this.size;i++)this.u[i]=this.mask[i]*(t-this.c.initial);this.time=this.steps=this.inputEnergy=this.boxEnergy=0;this.initialEnergy=this.energy();this.updateBoundary();this.solveSurface();}
+ initializeUniform(t){if(!Number.isFinite(t))throw Error('Nonfinite temperature');for(let i=0;i<this.size;i++)this.u[i]=this.mask[i]*(t-this.c.initial);this.peakTemperature.fill(t);this.time=this.steps=this.inputEnergy=this.boxEnergy=0;this.initialEnergy=this.energy();this.updateBoundary();this.solveSurface();}
  static phi(r){const a=Math.abs(r);if(a>=2)return 0;if(a<=1)return(3-2*a+Math.sqrt(1+4*a-4*a*a))/8;return(5-2*a-Math.sqrt(-7+12*a-4*a*a))/8;}
  grad(v,out){const {nx,ny,nz,h}=this;for(let z=0;z<nz;z++)for(let y=0;y<ny;y++)for(let x=0;x<=nx;x++)out[this.faceIndex(0,x,y,z)]=((x<nx?v[this.index(x,y,z)]:0)-(x>0?v[this.index(x-1,y,z)]:0))/h;
   for(let z=0;z<nz;z++)for(let y=0;y<=ny;y++)for(let x=0;x<nx;x++)out[this.faceIndex(1,x,y,z)]=((y<ny?v[this.index(x,y,z)]:0)-(y>0?v[this.index(x,y-1,z)]:0))/h;
@@ -112,7 +113,7 @@ class Solver{
  advanceTo(target,maxSteps=100){if(!Number.isFinite(target)||target<this.time||target>this.c.end||!Number.isInteger(maxSteps)||maxSteps<1)throw Error('Invalid target');for(let n=0;n<maxSteps&&this.time<target;n++){
   const limit=Math.min(target,this.nextFlip()),remaining=limit-this.time,dt=Math.min(this.stableDt,remaining);if(this.time+dt===this.time)throw Error('Time step below precision');
   this.spreadNormal(this.surface,this.faces);for(let i=0;i<this.faceSize;i++)this.faces[i]+=this.gradient[i];this.divergence(this.faces,this.work);this.scalar.spread(this.flux,this.gridTmp);
-  let sum=0;for(let i=0;i<this.size;i++){sum+=this.work[i];this.u[i]+=dt*(this.alpha*this.work[i]+this.gridTmp[i]);}
+  let sum=0;for(let i=0;i<this.size;i++){sum+=this.work[i];this.u[i]+=dt*(this.alpha*this.work[i]+this.gridTmp[i]);if(this.inside[i])this.peakTemperature[i]=Math.max(this.peakTemperature[i],this.c.initial+this.u[i]/this.mask[i]);}
   this.boxPower=this.capacity*this.alpha*this.h*this.h*this.h*sum;this.inputEnergy+=dt*(this.panPower+this.airPower);this.boxEnergy+=dt*this.boxPower;
   for(const i of this.coreIndices)if(!Number.isFinite(this.u[i]))throw Error('解出现非有限值，请降低分辨率或检查参数。');this.time=dt===remaining?limit:this.time+dt;this.steps++;this.updateBoundary();this.solveSurface();
  }return this.time>=target;}

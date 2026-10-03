@@ -72,3 +72,7 @@ The web app offers surface-temperature and boundary-condition views alongside th
 The web geometry is a rounded body clipped by planar caps: its level function is `max((r^p + |0.8 z/c|^p)^(1/p), |z/c|)`, where `r` is the normalized variable-outline radius and `c` is half-thickness. The angle-selected contact area depends on mesh resolution. No contact-depth parameter is used. This web update differs from the existing Android APK, which retains the earlier contact-band geometry.
 
 Temperature slices color every interior cell, including the near-boundary band. Core statistics continue to exclude the two-grid-spacing surface band; near-boundary values are more sensitive to reconstruction error.
+
+### Cookedness slice
+
+Select **Cookedness (peak temperature)** to classify each interior cell using its maximum temperature across every solver time step, including initialization. Cooling and flips preserve that maximum; reset/reconfiguration clears it. The [Certified Angus Beef guide](https://www.certifiedangusbeef.com/en/degree-of-doneness) gives rounded Celsius targets 52/57/63/66/71 for rare/medium rare/medium/medium well/well done. This visualization uses those targets as inclusive lower bounds; below 52 is a separate category. This interval convention is our visualization choice, not a published kinetic model. It does not account for cooking duration or establish food safety. Current-temperature slices and CSV outputs retain their existing meaning.

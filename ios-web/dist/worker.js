@@ -3,7 +3,7 @@ importScripts('./solver.js');
 let s,running=false,queued=false,target=0,history=[];
 function snapshot(){const stats=s.coreStats(),i=stats[3],row=[s.time,...stats.slice(0,3),s.x(i%s.nx),s.y(Math.floor(i/s.nx)%s.ny),s.z(Math.floor(i/(s.nx*s.ny))),s.flipsAt(s.time),s.panPower,s.airPower,s.energy(),s.inputEnergy,s.boxEnergy,s.energyBalanceError()];
  if(!history.length||history[history.length-1][0]!==s.time)history.push(row);if(history.length>2000)history=history.filter((_,i)=>i===0||i%2===0||i===history.length-1);
- return {time:s.time,stats,field:s.temperatures(),surface:s.surfaceTemperatures(),flux:s.inwardFluxes(),row,steps:s.steps,nextFlip:s.nextFlip(),running,history:history.map(r=>r.slice())};}
+ return {time:s.time,stats,field:s.temperatures(),peak:s.peakTemperature,surface:s.surfaceTemperatures(),flux:s.inwardFluxes(),row,steps:s.steps,nextFlip:s.nextFlip(),running,history:history.map(r=>r.slice())};}
 function send(){postMessage({type:'frame',...snapshot()});}
 function queue(){if(!queued&&running){queued=true;setTimeout(tick,0);}}
 function tick(){queued=false;if(!running||!s)return;try{const reached=s.advanceTo(target,1);if(reached){if(s.time>=s.c.end)running=false;send();target=Math.min(s.c.end,s.time+s.c.end/100);}queue();}catch(e){running=false;postMessage({type:'error',message:e.message});}}
