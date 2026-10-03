@@ -1,3 +1,9 @@
+# Current web update
+
+The web model now uses planar caps and binary facet contact, independently of the unchanged Android contact-band model. Web tests cover cap membership at exponents 2 and 4 and thickness resolutions 8 and 12, equal opposing cap areas, contact-face exchange, oven-only convection, finite evolution and energy accounting. Robin-sphere tests explicitly disable planar caps and pan transfer. The original Java/JS parity test is not applicable to this geometry change. Planar-pan physical accuracy and grid convergence remain unvalidated.
+
+The records below describe the previous model unless otherwise indicated.
+
 # Heat Lab 3.0 validation
 
 Validated 2026-10-02. This records an independent Java immersed-layer variant, not parity with a Julia execution or physical cooking measurements.

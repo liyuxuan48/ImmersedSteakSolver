@@ -1,13 +1,13 @@
 # Heat Lab
 
-[Live app](https://liyuxuan48.github.io/heat-lab/) · [Android download](https://github.com/liyuxuan48/heat-lab/releases/latest) · [MIT license](LICENSE)
+[Live app](https://liyuxuan48.github.io/heat-lab/) · [Android download](https://github.com/liyuxuan48/ImmersedSteakSolver/releases/latest) · [MIT license](LICENSE)
 
 **3D transient heat conduction in an adjustable steak**, with pan contact, air convection and scheduled flipping. Includes a native Android app and an iPhone-compatible home-screen web app. Computation runs locally on the device; no API key or simulation server is needed.
 
 ## Try it
 
 - **iPhone / browser:** open the [live app](https://liyuxuan48.github.io/heat-lab/). In Safari, choose Share → Add to Home Screen. This is a PWA, not a native iOS IPA.
-- **Android 8.0+:** download the development APK from [Releases](https://github.com/liyuxuan48/heat-lab/releases/latest), transfer it to your phone and open it. Rebuilding with your own signing key may require uninstalling the distributed app first.
+- **Android 8.0+:** download the development APK from [Releases](https://github.com/liyuxuan48/ImmersedSteakSolver/releases/latest), transfer it to your phone and open it. Rebuilding with your own signing key may require uninstalling the distributed app first.
 - **Local web preview:** install Python 3, then run `python3 -m http.server 8765 --directory ios-web/dist` and open `http://localhost:8765`. HTTPS is required for installed/offline PWA use on a phone.
 
 The Android interface is English. The web app supports English and Chinese: use the header language selector. It initially follows your browser language and remembers your choice on this device. Switching languages preserves edited settings and the current simulation. Settings stay on the current device. Switching away pauses a run; refreshing or process termination loses simulation results. Export CSV/STL to retain them. Initial web loading needs a connection; later offline availability depends on browser caching and storage eviction.
@@ -64,3 +64,9 @@ Issues and pull requests are welcome. Include a reproducible case with geometry,
 ## License
 
 [MIT](LICENSE). Scientific references above are acknowledgements, not endorsements. No Julia package source is bundled.
+
+### Web surface views and planar pan contact
+
+The web app offers surface-temperature and boundary-condition views alongside the interior temperature slice. Surface colors use the reconstructed marker temperatures and a labeled scale that adapts each frame. Pan Robin conditions apply only to facets wholly on the downward planar face. All other facets use air convection; setting the pan coefficient to zero enables oven-only convection everywhere. Flips exchange the two planar faces.
+
+The web geometry is a rounded body clipped by planar caps: its level function is `max((r^p + |0.8 z/c|^p)^(1/p), |z/c|)`, where `r` is the normalized variable-outline radius and `c` is half-thickness. Facets crossing the rim are classified as exposed, so resolved contact area depends on mesh resolution. No contact-depth parameter is used. This web update differs from the existing Android APK, which retains the earlier contact-band geometry.

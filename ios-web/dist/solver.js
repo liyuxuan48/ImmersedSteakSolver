@@ -1,20 +1,18 @@
 /* Independent JavaScript port of Heat Lab's Java immersed-layer solver.
- * Units: metres, seconds, degrees C. Float64 state; same geometry and time stepping.
+ * Units: metres, seconds, degrees C. Float64 state; planar steak faces and exact flip events.
  * Calibrated trace closure, not the reference Julia Neumann-constraint algorithm.
  */
 (function(root){
 'use strict';
-const defaults=()=>({length:.12,width:.08,thickness:.025,k:.45,rho:1050,cp:3500,initial:5,panTemperature:180,airTemperature:25,contactH:500,airH:15,contactDepth:.004,end:600,exponent:4,asymmetry:.1,flipTimes:[300],across:12});
+const defaults=()=>({length:.12,width:.08,thickness:.025,k:.45,rho:1050,cp:3500,initial:5,panTemperature:180,airTemperature:25,contactH:500,airH:15,flatFaces:true,end:600,exponent:4,asymmetry:.1,flipTimes:[300],across:12});
 const arr=n=>new Float64Array(n),dot=(a,b)=>{let s=0;for(let i=0;i<a.length;i++)s+=a[i]*b[i];return s;};
 const sub=(a,b)=>a.map((v,i)=>v-b[i]),cross=(a,b)=>[a[1]*b[2]-a[2]*b[1],a[2]*b[0]-a[0]*b[2],a[0]*b[1]-a[1]*b[0]],norm=a=>Math.sqrt(dot(a,a));
-const smooth=x=>{x=Math.max(0,Math.min(1,x));return x*x*(3-2*x);};
 function validate(c){
  for(const k of ['length','width','thickness','k','rho','cp','end'])if(!Number.isFinite(c[k])||c[k]<=0)throw Error('尺寸、材料参数和时间必须为正数。');
  if(c.length<.005||c.length>.5||c.width<.005||c.width>.5||c.thickness<.005||c.thickness>Math.min(c.length,c.width))throw Error('尺寸范围 5–500 mm；厚度不能超过长或宽。');
  if(!Number.isInteger(c.across)||c.across<8||c.across>32)throw Error('厚度方向网格数须为 8–32 的整数。');
  for(const k of ['initial','panTemperature','airTemperature'])if(!Number.isFinite(c[k])||Math.abs(c[k])>1000)throw Error('温度须在 −1000 至 1000 °C。');
  for(const k of ['contactH','airH'])if(!Number.isFinite(c[k])||c[k]<0||c[k]>20000)throw Error('换热系数须为 0–20000 W/(m² K)。');
- if(!Number.isFinite(c.contactDepth)||c.contactDepth<0||c.contactDepth>c.thickness/2)throw Error('接触带须为 0 至厚度的一半；0 表示关闭锅面接触。');
  if(!Number.isFinite(c.exponent)||c.exponent<2||c.exponent>4||!Number.isFinite(c.asymmetry)||c.asymmetry<0||c.asymmetry>.15)throw Error('圆润指数范围 2–4，轮廓变化范围 0–0.15。');
  if(c.end<1e-6||c.end>86400)throw Error('时长须为 1e−6 至 86400 秒。');
  if(!Array.isArray(c.flipTimes)||c.flipTimes.length>100)throw Error('最多设置 100 次翻面。');
@@ -22,7 +20,7 @@ function validate(c){
 }
 class Geometry{
  constructor(c,spacing){
-  this.a=c.length/2;this.b=c.width/2;this.c=c.thickness/2;this.p=c.exponent;this.asymmetry=c.asymmetry;this.vertices=[];this.quads=[];this.markers=[];
+  this.a=c.length/2;this.b=c.width/2;this.c=c.thickness/2;this.p=c.exponent;this.flatFaces=c.flatFaces!==false;this.asymmetry=c.asymmetry;this.vertices=[];this.quads=[];this.markers=[];
   const radii=[this.a,this.b,this.c];
   for(let axis=0;axis<3;axis++)for(const sign of [-1,1]){
    const d1=(axis+1)%3,d2=(axis+2)%3,n1=Math.max(2,Math.ceil(2*radii[d1]/spacing)),n2=Math.max(2,Math.ceil(2*radii[d2]/spacing)),base=this.vertices.length;
@@ -36,7 +34,7 @@ class Geometry{
    }
   }
  }
- level(x,y,z){const angle=Math.atan2(y/this.b,x/this.a),outline=1+this.asymmetry*(.65*Math.cos(3*angle)+.35*Math.sin(angle));const xy=Math.hypot(x/this.a,y/this.b)/outline;return (xy**this.p+Math.abs(z/this.c)**this.p)**(1/this.p);}
+ level(x,y,z){const angle=Math.atan2(y/this.b,x/this.a),outline=1+this.asymmetry*(.65*Math.cos(3*angle)+.35*Math.sin(angle));const xy=Math.hypot(x/this.a,y/this.b)/outline;const curved=(xy**this.p+Math.abs((this.flatFaces ? 0.8 : 1)*z/this.c)**this.p)**(1/this.p);return this.flatFaces?Math.max(curved,Math.abs(z/this.c)):curved;}
  project(v){const s=this.level(...v);return v.map(x=>x/s);}
  interiorDistance(x,y,z){const f=this.level(x,y,z),e=Math.min(this.a,this.b,this.c)*1e-4,gx=(this.level(x+e,y,z)-this.level(x-e,y,z))/(2*e),gy=(this.level(x,y+e,z)-this.level(x,y-e,z))/(2*e),gz=(this.level(x,y,z+e)-this.level(x,y,z-e))/(2*e),g=Math.sqrt(gx*gx+gy*gy+gz*gz);return g<1e-12?Math.min(this.a,this.b,this.c):(1-f)/g;}
 }
@@ -48,7 +46,7 @@ class Operator{
 class Solver{
  constructor(config){
   validate(config);const c=this.c=JSON.parse(JSON.stringify(config));this.capacity=c.rho*c.cp;const h=this.h=c.thickness/c.across;this.alpha=c.k/this.capacity;
-  this.stableDt=.4/(6*this.alpha/(h*h)+2*Math.max(c.contactDepth>0?c.contactH:0,c.airH)/this.capacity/h);
+  this.stableDt=.4/(6*this.alpha/(h*h)+2*Math.max(c.contactH,c.airH)/this.capacity/h);
   if(!Number.isFinite(this.stableDt)||this.stableDt<=0||c.end/this.stableDt>20000)throw Error('时间步数过多，请降低时长、网格分辨率或换热系数。');
   const even=n=>Math.floor((n+1)/2)*2;this.nx=even(Math.ceil(c.length*(1+c.asymmetry)/h)+10);this.ny=even(Math.ceil(c.width*(1+c.asymmetry)/h)+10);this.nz=c.across+10;
   const {nx,ny,nz}=this;this.size=nx*ny*nz;if(this.size>250000)throw Error('网格超过 250,000 个单元，请降低分辨率或长宽比。');
@@ -70,9 +68,16 @@ class Solver{
      if(type<0){this.scalar.ids[s][at]=this.index(i,j,k);this.scalar.weights[s][at]=w;}else{this.normal.ids[s][type*64+at]=this.faceIndex(type,i,j,k);this.normal.weights[s][type*64+at]=w*q[4+type];}at++;
     }
    }
-   for(let parity=0;parity<2;parity++){const sign=parity===0?1:-1,depth=c.thickness/2+sign*q[2];this.contact[parity][s]=c.contactDepth>0?smooth(1-depth/c.contactDepth)*smooth(-sign*q[6]):0;if(this.contact[parity][s]>1e-6)contacts[parity]++;}
+   // Only wholly planar facets on the downward cap touch the pan.
+   // A crossing facet at the rounded rim remains exposed to air.
+   for(let parity=0;parity<2;parity++){
+    const sign=parity===0?1:-1;
+    const flat=this.geometry.flatFaces&&this.geometry.quads[s].every(i=>Math.abs(sign*this.geometry.vertices[i][2]+c.thickness/2)<1e-10*c.thickness);
+    this.contact[parity][s]=c.contactH>0&&flat&&sign*q[6]<-.999999?1:0;
+    if(this.contact[parity][s])contacts[parity]++;
+   }
   }
-  if(c.contactDepth>0&&c.contactH>0&&contacts.some(n=>n===0))throw Error('未解析出锅面接触点，请增加接触带或分辨率。');
+  if(c.contactH>0&&contacts.some(n=>n===0))throw Error('未解析出平面接触网格面，请提高分辨率或关闭锅面换热。');
   this.normal.spread(this.scaling,this.faces);this.divergence(this.faces,this.gridTmp);this.solveMask(this.gridTmp);
   this.volume=0;for(const a of this.mask)this.volume+=a*h*h*h;
   this.grad(this.mask,this.gradient);const n=norm(this.scaling);for(let s=0;s<m;s++)this.unit[s]=this.scaling[s]/n;for(let i=0;i<this.faceSize;i++)this.correction[i]=(-this.gradient[i]-this.faces[i])/n;
