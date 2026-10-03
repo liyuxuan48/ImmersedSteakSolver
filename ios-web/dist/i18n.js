@@ -15,7 +15,7 @@ const en={
 '内部温度切片':'Interior temperature slice','定位冷点':'Find cold point','切片方向':'Slice plane',
 'XY · 沿厚度 z':'XY · through thickness z','XZ · 沿宽度 y':'XZ · along width y','YZ · 沿长度 x':'YZ · along length x',
 '三维温度场切片':'Slice of the 3D temperature field',
-'灰色为距表面不足 2 个网格间距的区域；冷点和统计仅取可解析内部。切片坐标随牛排移动。':'Grey marks the band within two grid spacings of the surface. Cold points and statistics use only the resolved core. Slice coordinates stay attached to the steak.',
+'切片显示所有内部网格单元的温度，包括靠近边界的单元。边界附近温度受浸没边界重构误差影响较大；冷点和统计仍仅取可解析内部。切片坐标随牛排移动。':'Slices show temperatures in all interior cells, including cells near the boundary. Near-boundary temperatures are more sensitive to immersed-boundary reconstruction error; cold points and statistics still use only the resolved core. Slice coordinates stay attached to the steak.',
 '数值诊断':'Numerical diagnostics',
 '辅助计算域的热量交换是数值误差，不是实际散热。请比较不同网格分辨率。':'Heat exchange with the auxiliary box is numerical error, not physical cooling. Compare different grid resolutions.',
 '导出结果':'Export results','内部 CSV':'Core CSV','温度历史':'Temperature history','边界 CSV':'Boundary CSV','网格 STL':'Mesh STL',

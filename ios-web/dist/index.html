@@ -12,7 +12,7 @@
 <div class="section-title"><h2>内部温度切片</h2><button id="coldSlice" class="quiet">定位冷点</button></div>
 <label class="select-label">切片方向<select id="plane"><option value="0">XY · 沿厚度 z</option><option value="1">XZ · 沿宽度 y</option><option value="2">YZ · 沿长度 x</option></select></label>
 <label class="slice-label" for="slice" id="sliceLabel">z = 0 mm</label><input id="slice" type="range" min="0" max="21" value="11"><canvas id="heatmap" aria-label="三维温度场切片"></canvas><div class="scale"><span id="low">5 °C</span><div></div><span id="high">180 °C</span></div>
-<p class="muted">灰色为距表面不足 2 个网格间距的区域；冷点和统计仅取可解析内部。切片坐标随牛排移动。</p>
+<p class="muted">切片显示所有内部网格单元的温度，包括靠近边界的单元。边界附近温度受浸没边界重构误差影响较大；冷点和统计仍仅取可解析内部。切片坐标随牛排移动。</p>
 <details><summary>数值诊断</summary><div id="diagnostics"></div><p class="muted">辅助计算域的热量交换是数值误差，不是实际散热。请比较不同网格分辨率。</p></details>
 <details><summary>导出结果</summary><div class="export-grid"><button data-export="core">内部 CSV</button><button data-export="history">温度历史</button><button data-export="boundary">边界 CSV</button><button data-export="mesh">网格 STL</button></div><p class="muted">导出当前显示的时刻。iPhone 可选择“存储到文件”。</p></details></section>
 <section id="setup" class="page" hidden><h1>设置模拟</h1><p class="muted">应用后将清除上一次结果。</p><div class="presets"><button id="steakPreset">圆润牛排</button><button id="ovenPreset">仅烤箱</button></div><form id="configForm"><div id="fields"></div><button type="submit" class="primary apply">应用并重新开始</button></form></section>
