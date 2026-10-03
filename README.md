@@ -10,7 +10,7 @@
 - **Android 8.0+:** download the development APK from [Releases](https://github.com/liyuxuan48/heat-lab/releases/latest), transfer it to your phone and open it. Rebuilding with your own signing key may require uninstalling the distributed app first.
 - **Local web preview:** install Python 3, then run `python3 -m http.server 8765 --directory ios-web/dist` and open `http://localhost:8765`. HTTPS is required for installed/offline PWA use on a phone.
 
-The Android interface is English; the web interface is Chinese. Settings stay on the current device. Switching away pauses a run; refreshing or process termination loses simulation results. Export CSV/STL to retain them. Initial web loading needs a connection; later offline availability depends on browser caching and storage eviction.
+The Android interface is English. The web app supports English and Chinese: use the header language selector. It initially follows your browser language and remembers your choice on this device. Switching languages preserves edited settings and the current simulation. Settings stay on the current device. Switching away pauses a run; refreshing or process termination loses simulation results. Export CSV/STL to retain them. Initial web loading needs a connection; later offline availability depends on browser caching and storage eviction.
 
 ## Features
 

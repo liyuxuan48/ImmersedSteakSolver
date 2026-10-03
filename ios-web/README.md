@@ -1,6 +1,8 @@
 # Heat Lab for iPhone
 
-中文 iPhone 主屏幕网页 App（PWA），不是签名 IPA / App Store 原生安装包。
+中英双语 iPhone 主屏幕网页 App（PWA），不是签名 IPA / App Store 原生安装包。
+
+顶部菜单可切换 English / 中文；首次使用按浏览器语言选择，之后记住选择。切换语言不会重置模拟或修改参数。
 
 ## 使用与安装
 
@@ -24,7 +26,8 @@ python3 -m http.server 8765 --directory dist
 
 - `dist/solver.js`：Android Java 求解器的 Float64 JavaScript 移植。
 - `dist/worker.js`：独立计算线程、时间推进与快照。
-- `dist/app.js`、`style.css`、`index.html`：中文手机界面。
+- `dist/app.js`、`style.css`、`index.html`：手机界面。
+- `dist/i18n.js`：中英文显示、动态状态与错误提示；不改变求解器或导出数据。
 - `dist/export.js`：CSV 和 STL 生成。
 - `dist/sw.js`、manifest、图标：主屏幕与缓存支持。
 
@@ -41,3 +44,5 @@ Java/JavaScript 相同算例（8 个厚度网格，60 s，17.123 和 40.987 s �
 在本地 Chromium 浏览器以 390×844 手机视口检查了布局、设置、双次翻面完成、切片、冷点定位、暂停/继续及安装说明。WebMCP 两个可选工具注册、有效配置读回及无效输入拒绝已验证。浏览器自动化未获得下载事件，因此不将下载或 iOS 系统分享面板视为已实机验证。没有可用的 iPhone / iOS 模拟器；Safari 真机安装、性能和离线缓存仍需实机确认。
 
 默认 600 s 浏览器算例（中途暂停/继续一次）完成：1 次翻面，内部最低 50.494143 °C、最高 120.134423 °C、平均 80.826874 °C。暂停时间造成额外短时间步，结果允许与连续运行略有不同。
+
+英语支持：自动测试覆盖静态界面、错误信息、动态诊断数字保留和语言选择。在本地 390×844 浏览器验证了切换语言时保留已编辑参数和完成结果、英语校验提示以及刷新后语言偏好保留。未在 iPhone 真机验证。
