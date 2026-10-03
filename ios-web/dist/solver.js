@@ -7,6 +7,8 @@
 const defaults=()=>({length:.12,width:.08,thickness:.025,k:.45,rho:1050,cp:3500,initial:5,panTemperature:180,airTemperature:25,contactH:500,airH:15,flatFaces:true,end:600,exponent:4,asymmetry:.1,flipTimes:[300],across:12});
 const arr=n=>new Float64Array(n),dot=(a,b)=>{let s=0;for(let i=0;i<a.length;i++)s+=a[i]*b[i];return s;};
 const sub=(a,b)=>a.map((v,i)=>v-b[i]),cross=(a,b)=>[a[1]*b[2]-a[2]*b[1],a[2]*b[0]-a[0]*b[2],a[0]*b[1]-a[1]*b[0]],norm=a=>Math.sqrt(dot(a,a));
+// Compare the normalized outward facet normal with world down, inclusive at 15°.
+function panFacing(normal,parity=0){const magnitude=Math.hypot(...normal);return magnitude>0&&-(parity%2?-1:1)*normal[2]/magnitude>=Math.cos(Math.PI/12)-1e-12;}
 function validate(c){
  for(const k of ['length','width','thickness','k','rho','cp','end'])if(!Number.isFinite(c[k])||c[k]<=0)throw Error('尺寸、材料参数和时间必须为正数。');
  if(c.length<.005||c.length>.5||c.width<.005||c.width>.5||c.thickness<.005||c.thickness>Math.min(c.length,c.width))throw Error('尺寸范围 5–500 mm；厚度不能超过长或宽。');
@@ -68,16 +70,13 @@ class Solver{
      if(type<0){this.scalar.ids[s][at]=this.index(i,j,k);this.scalar.weights[s][at]=w;}else{this.normal.ids[s][type*64+at]=this.faceIndex(type,i,j,k);this.normal.weights[s][type*64+at]=w*q[4+type];}at++;
     }
    }
-   // Only wholly planar facets on the downward cap touch the pan.
-   // A crossing facet at the rounded rim remains exposed to air.
+   // Flipping reverses the normal's world z component.
    for(let parity=0;parity<2;parity++){
-    const sign=parity===0?1:-1;
-    const flat=this.geometry.flatFaces&&this.geometry.quads[s].every(i=>Math.abs(sign*this.geometry.vertices[i][2]+c.thickness/2)<1e-10*c.thickness);
-    this.contact[parity][s]=c.contactH>0&&flat&&sign*q[6]<-.999999?1:0;
+    this.contact[parity][s]=c.contactH>0&&panFacing(q.slice(4,7),parity)?1:0;
     if(this.contact[parity][s])contacts[parity]++;
    }
   }
-  if(c.contactH>0&&contacts.some(n=>n===0))throw Error('未解析出平面接触网格面，请提高分辨率或关闭锅面换热。');
+  if(c.contactH>0&&contacts.some(n=>n===0))throw Error('未解析出符合角度条件的接触面，请提高分辨率或关闭锅面换热。');
   this.normal.spread(this.scaling,this.faces);this.divergence(this.faces,this.gridTmp);this.solveMask(this.gridTmp);
   this.volume=0;for(const a of this.mask)this.volume+=a*h*h*h;
   this.grad(this.mask,this.gradient);const n=norm(this.scaling);for(let s=0;s<m;s++)this.unit[s]=this.scaling[s]/n;for(let i=0;i<this.faceSize;i++)this.correction[i]=(-this.gradient[i]-this.faces[i])/n;
@@ -118,5 +117,5 @@ class Solver{
   for(const i of this.coreIndices)if(!Number.isFinite(this.u[i]))throw Error('解出现非有限值，请降低分辨率或检查参数。');this.time=dt===remaining?limit:this.time+dt;this.steps++;this.updateBoundary();this.solveSurface();
  }return this.time>=target;}
 }
-const api={defaults,validate,Geometry,Solver};if(typeof module!=='undefined'&&module.exports)module.exports=api;else root.HeatLab=api;
+const api={panFacing,defaults,validate,Geometry,Solver};if(typeof module!=='undefined'&&module.exports)module.exports=api;else root.HeatLab=api;
 })(globalThis);

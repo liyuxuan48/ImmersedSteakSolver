@@ -3,3 +3,5 @@
 .header-actions{display:flex;align-items:center;gap:4px}#language{width:auto;margin:0;font-size:14px;min-height:44px;padding:8px;border:1px solid var(--line)}html[lang=en] .legend{gap:12px}html[lang=en] #minimum{font-size:48px}html[lang=en] .section-title{align-items:flex-start}html[lang=en] .section-title h2{flex:1}html[lang=en] .section-title button{flex:0 0 100px}
 
 [hidden]{display:none!important}
+
+footer a{display:inline-block;color:var(--accent,#5ce4cd);padding:12px 0;text-underline-offset:3px}

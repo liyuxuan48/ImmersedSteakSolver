@@ -1,6 +1,6 @@
 # Current web update
 
-The web model now uses planar caps and binary facet contact, independently of the unchanged Android contact-band model. Web tests cover cap membership at exponents 2 and 4 and thickness resolutions 8 and 12, equal opposing cap areas, contact-face exchange, oven-only convection, finite evolution and energy accounting. Robin-sphere tests explicitly disable planar caps and pan transfer. The original Java/JS parity test is not applicable to this geometry change. Planar-pan physical accuracy and grid convergence remain unvalidated.
+The web model now uses planar caps and binary normal-angle contact (15 degrees from vertically downward), independently of the unchanged Android contact-band model. Web tests cover angle selection at exponents 2 and 4 and thickness resolutions 8 and 12, equal opposing contact areas and synthetic normals just below, at, and above 15 degrees, contact-face exchange, oven-only convection, finite evolution and energy accounting. Robin-sphere tests explicitly disable planar caps and pan transfer. The original Java/JS parity test is not applicable to this geometry change. Planar-pan physical accuracy and grid convergence remain unvalidated.
 
 The records below describe the previous model unless otherwise indicated.
 

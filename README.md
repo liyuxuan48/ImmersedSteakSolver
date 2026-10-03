@@ -65,8 +65,8 @@ Issues and pull requests are welcome. Include a reproducible case with geometry,
 
 [MIT](LICENSE). Scientific references above are acknowledgements, not endorsements. No Julia package source is bundled.
 
-### Web surface views and planar pan contact
+### Web surface views and normal-angle pan contact
 
-The web app offers surface-temperature and boundary-condition views alongside the interior temperature slice. Surface colors use the reconstructed marker temperatures and a labeled scale that adapts each frame. Pan Robin conditions apply only to facets wholly on the downward planar face. All other facets use air convection; setting the pan coefficient to zero enables oven-only convection everywhere. Flips exchange the two planar faces.
+The web app offers surface-temperature and boundary-condition views alongside the interior temperature slice. Surface colors use the reconstructed marker temperatures and a labeled scale that adapts each frame. Pan Robin conditions apply to facets whose outward unit normals lie within 15 degrees of vertically downward (inclusive), including qualifying rounded rim facets. All other facets use air convection; setting the pan coefficient to zero enables oven-only convection everywhere. Flips exchange the two planar faces.
 
-The web geometry is a rounded body clipped by planar caps: its level function is `max((r^p + |0.8 z/c|^p)^(1/p), |z/c|)`, where `r` is the normalized variable-outline radius and `c` is half-thickness. Facets crossing the rim are classified as exposed, so resolved contact area depends on mesh resolution. No contact-depth parameter is used. This web update differs from the existing Android APK, which retains the earlier contact-band geometry.
+The web geometry is a rounded body clipped by planar caps: its level function is `max((r^p + |0.8 z/c|^p)^(1/p), |z/c|)`, where `r` is the normalized variable-outline radius and `c` is half-thickness. The angle-selected contact area depends on mesh resolution. No contact-depth parameter is used. This web update differs from the existing Android APK, which retains the earlier contact-band geometry.
