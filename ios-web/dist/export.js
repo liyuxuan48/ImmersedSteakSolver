@@ -1,6 +1,6 @@
 'use strict';
 (function(root){
-function metadata(config,frame){return '# Heat Lab iPhone; 3D calibrated immersed-layer variant; core excludes 2h band\n# config_SI='+JSON.stringify(config)+'\n# time_s='+frame.time+'\n';}
+function metadata(config,frame){return '# Heat Lab iPhone; 3D constrained immersed-layer Robin solver; core excludes 2h band\n# config_SI='+JSON.stringify(config)+'\n# auxiliary_exterior_Robin_factor='+(config.exteriorRobinFactor??50)+'\n# numerical_box_J includes auxiliary-interface and outer-box exchange; boundary flux is physical interior only\n# time_s='+frame.time+'\n';}
 function exportData(kind,config,grid,frame){if(!grid||!frame)throw Error('请先完成网格初始化。');const f=frame,rows=[];let name='steak-'+kind+'.csv',type='text/csv;charset=utf-8',content=metadata(config,frame);
  if(kind==='core'){rows.push('x_m,y_m,z_m,temperature_C,time_s');for(const i of grid.coreIndices)rows.push([grid.x0+(i%grid.nx+.5)*grid.h,grid.y0+(Math.floor(i/grid.nx)%grid.ny+.5)*grid.h,grid.z0+(Math.floor(i/(grid.nx*grid.ny))+.5)*grid.h,f.field[i],f.time].join(','));}
  else if(kind==='history'){rows.push('time_s,core_min_C,core_max_C,core_mean_C,cold_x_m,cold_y_m,cold_z_m,flip_count,pan_W,air_W,masked_energy_J,boundary_input_J,numerical_box_J,accounting_residual_J');rows.push(...f.history.map(r=>r.join(',')));}

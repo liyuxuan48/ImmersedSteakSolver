@@ -23,13 +23,15 @@ The Android interface is English. The web app supports English and Chinese: use 
 
 ## Numerical method and limitations
 
-An independent Java implementation and Float64 JavaScript port use regularized immersed single and double layers on a Cartesian volume grid with a closed surface mesh. The surface temperature uses a calibrated discrete trace closure. This is inspired by [JuliaIBPM / ImmersedLayers.jl](https://github.com/JuliaIBPM/ImmersedLayers.jl) and [ComputationalHeatTransfer.jl](https://github.com/JuliaIBPM/ComputationalHeatTransfer.jl), but does not execute those packages and is not their reference Neumann-constraint algorithm. No numerical parity with Julia is claimed.
+The **web solver now solves an immersed-layer boundary constraint** for the unknown surface temperature jump at every state. Pan/air Robin conditions and a homogeneous auxiliary-exterior Robin condition are coupled to the Cartesian temperature field. A sparse preconditioned conjugate-gradient solve replaces the former calibrated surface closure. The interior heat-flux export excludes auxiliary exchange.
 
-This is a coarse research model. Core statistics exclude a two-grid-spacing surface band. Grid refinement is not always monotonic, and the finite auxiliary box introduces numerical heat exchange. There is no evaporation, radiation, crust, fluid flow, deformation or food-safety prediction. Material and contact defaults are illustrative. See [Android method and build details](docs/ANDROID.md), [numerical validation](VALIDATION.md) and [web validation](ios-web/README.md).
+This follows the constrained formulation in [JuliaIBPM / ImmersedLayers.jl](https://juliaibpm.github.io/ImmersedLayers.jl/stable/manual/heatconduction-neumann/) with an independently derived two-sided Robin extension and explicit time integration. It does not run Julia packages or claim Julia numerical parity. The existing Android APK retains its earlier unconstrained closure.
+
+Read [the full equations, algorithm, auxiliary condition and validation](docs/CONSTRAINED_METHOD.md). Core statistics exclude two grid spacings near the surface. Raw near-boundary temperatures and peak-temperature cookedness remain sensitive to spatial error. A small boundary residual establishes the discrete constraint, not physical accuracy. There is no evaporation, radiation, crust, fluid flow, deformation or food-safety prediction.
 
 ## Build and test
 
-Requirements: JDK 17 or 21, Node.js 22+ for the cross-platform tests. No npm dependencies.
+Requirements: JDK 17 or 21 for Android tests; Node.js 22+ for web tests. No npm dependencies.
 
 ```sh
 bash scripts/test.sh

@@ -1,6 +1,6 @@
-# Current web update
+# Current constrained web solver
 
-The web model now uses planar caps and binary normal-angle contact (15 degrees from vertically downward), independently of the unchanged Android contact-band model. Web tests cover angle selection at exponents 2 and 4 and thickness resolutions 8 and 12, equal opposing contact areas and synthetic normals just below, at, and above 15 degrees, contact-face exchange, oven-only convection, finite evolution and energy accounting. Robin-sphere tests explicitly disable planar caps and pan transfer. The original Java/JS parity test is not applicable to this geometry change. Planar-pan physical accuracy and grid convergence remain unvalidated.
+The latest web solver replaces the calibrated trace closure with an explicit constrained immersed-layer Robin formulation. See [the current equations and reproducible validation](docs/CONSTRAINED_METHOD.md), including surface residuals, auxiliary-exterior sensitivity, and sphere refinement errors. The Android solver and the historical records below are unchanged.
 
 The records below describe the previous model unless otherwise indicated.
 

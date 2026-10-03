@@ -2,6 +2,7 @@
 set -euo pipefail
 cd "$(dirname "$0")/.."
 node tests/ios/solver.test.cjs
+node tests/ios/constraint.test.cjs
 node tests/ios/flat-contact.test.cjs
 node tests/ios/export.test.cjs
 node tests/ios/i18n.test.cjs
